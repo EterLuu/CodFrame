@@ -1,5 +1,8 @@
 package com.ghostchu.codframe;
 
+import com.alessiodp.lastloginapi.api.LastLogin;
+import com.alessiodp.lastloginapi.api.interfaces.LastLoginAPI;
+import com.alessiodp.lastloginapi.api.interfaces.LastLoginPlayer;
 import net.kyori.adventure.inventory.Book;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -27,21 +30,41 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class CodFrame extends JavaPlugin implements Listener {
     private final NamespacedKey KEY = new NamespacedKey(this, "owner");
     private final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
+    private final ConcurrentHashMap<UUID, String> nameCache = new ConcurrentHashMap<>();
+
+    LastLoginAPI lastLoginAPI;
 
     @Override
     public void onEnable() {
         // Plugin startup logic
         saveDefaultConfig();
+
+        if (getServer().getPluginManager().getPlugin("LastLoginAPI") != null) {
+            if (getServer().getPluginManager().getPlugin("LastLoginAPI").isEnabled()) {
+                lastLoginAPI = LastLogin.getApi();
+            }
+        }
+
         Bukkit.getPluginManager().registerEvents(this, this);
     }
 
     @Override
     public void onDisable() {
         // Plugin shutdown logic
+    }
+
+    private static boolean isFolia() {
+        try {
+            Class.forName("io.papermc.paper.threadedregions.RegionizedServer");
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
     }
 
     public Optional<UUID> queryProtection(ItemFrame frame) {
@@ -54,13 +77,11 @@ public final class CodFrame extends JavaPlugin implements Listener {
     }
 
     public boolean claimProtection(ItemFrame frame, UUID uuid) {
-        // Whether the protection is exists or not, add basic protection first to avoid bug
         frame.setFixed(true);
         frame.setInvulnerable(true);
-        if (queryProtection(frame).isPresent()) { // already has an owner
+        if (queryProtection(frame).isPresent()) {
             return false;
         }
-        // add owner key for this player
         frame.getPersistentDataContainer().set(KEY, PersistentDataType.STRING, uuid.toString());
         return true;
     }
@@ -90,31 +111,35 @@ public final class CodFrame extends JavaPlugin implements Listener {
     }
 
     public void playerDoProtection(Player player, ItemFrame frame) {
-        if (claimProtection(frame, player.getUniqueId())) { // success add
-            player.sendMessage(MINI_MESSAGE.deserialize(getConfig().getString("messages.frame.success-set", "")));
-        } else { // already has an owner key
-            Optional<UUID> uuid = queryProtection(frame);
-            if (uuid.get().equals(player.getUniqueId()) || player.hasPermission("codframe.admin")) {
-                removeProtection(frame, player.getUniqueId());
-                player.sendMessage(MINI_MESSAGE.deserialize(getConfig().getString("messages.frame.success-remove", "")));
+        getServer().getRegionScheduler().execute(this, frame.getLocation(), () -> {
+            if (claimProtection(frame, player.getUniqueId())) {
+                player.sendMessage(MINI_MESSAGE.deserialize(getConfig().getString("messages.frame.success-set", "")));
             } else {
-                String message = getConfig()
-                        .getString("messages.frame.failed-other-protected", "")
-                        .replace("<0>", getPlayerName(uuid));
-                player.sendMessage(MINI_MESSAGE.deserialize(message));
+                Optional<UUID> uuid = queryProtection(frame);
+                if (uuid.get().equals(player.getUniqueId()) || player.hasPermission("codframe.admin")) {
+                    removeProtection(frame, player.getUniqueId());
+                    player.sendMessage(MINI_MESSAGE.deserialize(getConfig().getString("messages.frame.success-remove", "")));
+                } else {
+                    String message = getConfig()
+                            .getString("messages.frame.failed-other-protected", "")
+                            .replace("<0>", getPlayerName(uuid.get()));
+                    player.sendMessage(MINI_MESSAGE.deserialize(message));
+                }
             }
-        }
+        });
     }
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (sender instanceof Player player) {
-            Entity target = player.getTargetEntity(4);
-            if (target instanceof ItemFrame frame) {
-                playerDoProtection(player, frame);
-            } else {
-                player.sendMessage(MINI_MESSAGE.deserialize(getConfig().getString("messages.frame.failed-invalid", "")));
-            }
+            player.getScheduler().run(this, task -> {
+                Entity target = player.getTargetEntity(4);
+                if (target instanceof ItemFrame frame) {
+                    playerDoProtection(player, frame);
+                } else {
+                    player.sendMessage(MINI_MESSAGE.deserialize(getConfig().getString("messages.frame.failed-invalid", "")));
+                }
+            }, null);
             return true;
         }
         return false;
@@ -160,15 +185,15 @@ public final class CodFrame extends JavaPlugin implements Listener {
     public void interactFrame(PlayerInteractEntityEvent event) {
         if (event.getRightClicked() instanceof ItemFrame frame && event.getHand() == EquipmentSlot.HAND) {
             Optional<UUID> uuid = queryProtection(frame);
-            if (event.getPlayer().isSneaking()) { // Sneak Toggle Protection
+            if (event.getPlayer().isSneaking()) {
                 event.setCancelled(true);
                 playerDoProtection(event.getPlayer(), frame);
-            } else if (uuid.isPresent()) { // Preview normally
+            } else if (uuid.isPresent()) {
                 event.setCancelled(true);
                 event.getPlayer().sendActionBar(
                         MINI_MESSAGE.deserialize(getConfig()
                                 .getString("messages.general.owner-info", "")
-                                .replace("<0>", getPlayerName(uuid))
+                                .replace("<0>", getPlayerName(uuid.get()))
                         )
                 );
                 if (frame.getItem().hasItemMeta()) {
@@ -183,18 +208,33 @@ public final class CodFrame extends JavaPlugin implements Listener {
         player.sendMessage(MINI_MESSAGE.deserialize(getConfig().getString("messages.general.hover-preview", "")).hoverEvent(item.asHoverEvent()));
     }
 
-    private @NotNull String getPlayerName(Optional<UUID> uuid) {
-        // try to replace with owner username
-        Player owner = Bukkit.getPlayer(uuid.get());
-        if (owner != null) {
-            return owner.getName();
-        } else {
-            OfflinePlayer offlineOwner = Bukkit.getOfflinePlayer(uuid.get());
-            if (offlineOwner.getName() != null) {
-                return offlineOwner.getName();
-            } else {
-                return "???";
+    private @NotNull String getPlayerName(UUID uuid) {
+        String cached = nameCache.get(uuid);
+        if (cached != null) {
+            return cached;
+        }
+        if (lastLoginAPI != null) {
+            LastLoginPlayer lastLoginPlayer = lastLoginAPI.getPlayer(uuid);
+            String name = lastLoginPlayer.getName();
+            if (name != null) {
+                nameCache.put(uuid, name);
+                return name;
             }
         }
+        asyncBackfillName(uuid);
+        return uuid.toString();
+    }
+
+    private void asyncBackfillName(UUID uuid) {
+        if (nameCache.containsKey(uuid)) {
+            return;
+        }
+        getServer().getAsyncScheduler().runNow(this, task -> {
+            OfflinePlayer offlineOwner = Bukkit.getOfflinePlayer(uuid);
+            String name = offlineOwner.getName();
+            if (name != null) {
+                nameCache.put(uuid, name);
+            }
+        });
     }
 }

@@ -1,9 +1,20 @@
 name: CodFrame
 version: '${project.version}'
 main: com.ghostchu.codframe.CodFrame
-api-version: 1.16
+api-version: '26.1.2'
+folia-supported: true
+softdepend:
+  - LastLoginAPI
 authors: [ Ghost_chu, MagmaBlock ]
 commands:
   codframe:
     description: Lock or unlock an ItemFrame
     usage: /codframe
+    permission: codframe.use
+permissions:
+  codframe.use:
+    description: Allows locking/unlocking ItemFrames
+    default: true
+  codframe.admin:
+    description: Allows bypassing ItemFrame protection ownership
+    default: op

@@ -6,13 +6,13 @@
 
     <groupId>com.ghostchu</groupId>
     <artifactId>CodFrame</artifactId>
-    <version>1.1.1</version>
+    <version>1.2.0</version>
     <packaging>jar</packaging>
 
     <name>CodFrame</name>
 
     <properties>
-        <java.version>17</java.version>
+        <java.version>25</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -21,16 +21,15 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.1</version>
+                <version>3.13.0</version>
                 <configuration>
-                    <source>${java.version}</source>
-                    <target>${java.version}</target>
+                    <release>${java.version}</release>
                 </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.2.4</version>
+                <version>3.6.0</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -55,11 +54,15 @@
     <repositories>
         <repository>
             <id>papermc-repo</id>
-            <url>https://papermc.io/repo/repository/maven-public/</url>
+            <url>https://repo.papermc.io/repository/maven-public/</url>
         </repository>
         <repository>
             <id>sonatype</id>
             <url>https://oss.sonatype.org/content/groups/public/</url>
+        </repository>
+        <repository>
+            <id>alessiodp-repo</id>
+            <url>https://repo.alessiodp.com/releases/</url>
         </repository>
     </repositories>
 
@@ -67,7 +70,13 @@
         <dependency>
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
-            <version>1.19-R0.1-SNAPSHOT</version>
+            <version>26.1.2.build.74-stable</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.alessiodp.lastloginapi</groupId>
+            <artifactId>lastloginapi-api</artifactId>
+            <version>1.7.4</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
