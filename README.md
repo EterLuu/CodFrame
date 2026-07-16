@@ -1,28 +1,27 @@
 # CodFrame
 
-A simple ItemFrame protect and in-frame item preview plugin.
+一个简洁的物品展示框保护与框内物品预览插件。
 
-A Paper plugin with full [Folia](https://papermc.io/software/folia) support — runs on [Paper](https://papermc.io/) (or forks like [Purpur](https://purpurmc.org/)) and Folia. DO NOT INSTALL ON SPIGOT!
+支持 [Paper](https://papermc.io/)（及其分支，如 [Purpur](https://purpurmc.org/)）与 [Folia](https://papermc.io/software/folia)，请勿安装到 Spigot 上！
 
-**Supported server version:** Minecraft 26.1.2 (Paper / Folia)
-**Requires:** Java 25+
+**支持服务端版本：** Minecraft 26.1.2（Paper / Folia）
+**运行环境要求：** Java 25+
 
 [Modrinth](https://modrinth.com/plugin/codframe)
 
-## Why CodFrame
+## 为什么用 CodFrame
 
-CodFrame can protect your items in itemframe to avoid grief like explosion, shoot, lava, fire, block break, interact, rotate. 
+CodFrame 能够保护展示框中的物品免遭爆炸、射击、岩浆、火焰、方块破坏、交互、旋转等破坏行为。
 
-Also provide a cool and useful item-showcase feature to allow any player preview your awesome armor/weapon, or read your book without take out from ItemFrame!
+同时提供一项实用且炫酷的物品展示功能：任何玩家都能预览你展示的盔甲/武器，或将展示框内的成书取出来阅读，而无需将其从展示框中拿出！
 
-## Command
-`/codframe` - Set or remove a CodFrame when you looking at a ItemFrame.
+## 命令
+`/codframe` - 将准星对准一个物品展示框，执行该命令以设置或移除 CodFrame 保护。
 
-## Permission
-- `codframe.use` - Use the `/codframe` command to lock/unlock ItemFrames (default: granted to all players)
-- `codframe.admin` - Bypass the owner check, force remove an existing CodFrame (default: op)
+## 权限
+- `codframe.use` - 使用 `/codframe` 命令锁定/解锁展示框（默认：所有玩家）
+- `codframe.admin` - 绕过归属权检查，强制移除已存在的 CodFrame（默认：OP）
 
-## Demo Video
+## 演示视频
 
 [![DemoVideo](http://img.youtube.com/vi/WFKfd7CN-BU/0.jpg)](https://www.youtube.com/watch?v=WFKfd7CN-BU)
-
