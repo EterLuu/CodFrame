@@ -2,9 +2,10 @@
 
 A simple ItemFrame protect and in-frame item preview plugin.
 
-**This is a PAPER only plugin, can run on [Paper](https://papermc.io/), or Paper's fork like [Purpur](https://purpurmc.org/) only! DO NOT INSTALL ON SPIGOT!**
+A Paper plugin with full [Folia](https://papermc.io/software/folia) support — runs on [Paper](https://papermc.io/) (or forks like [Purpur](https://purpurmc.org/)) and Folia. DO NOT INSTALL ON SPIGOT!
 
-**This plugin require Java 17 and up to be run.**
+**Supported server version:** Minecraft 26.1.2 (Paper / Folia)
+**Requires:** Java 25+
 
 [Modrinth](https://modrinth.com/plugin/codframe)
 
@@ -18,7 +19,8 @@ Also provide a cool and useful item-showcase feature to allow any player preview
 `/codframe` - Set or remove a CodFrame when you looking at a ItemFrame.
 
 ## Permission
-`codframe.admin` - Bypass the owner check, force remove a exists CodFrame.
+- `codframe.use` - Use the `/codframe` command to lock/unlock ItemFrames (default: granted to all players)
+- `codframe.admin` - Bypass the owner check, force remove an existing CodFrame (default: op)
 
 ## Demo Video
 
